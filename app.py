@@ -109,6 +109,7 @@ model = train_model(X, y)
 # PREDICTION
 # -----------------------------
 if st.button("🔮 Predict Future Prices"):
+    st.write("Volatility:", vol)
     last_window = prices[-window:].copy()
     future_predictions = []
 
