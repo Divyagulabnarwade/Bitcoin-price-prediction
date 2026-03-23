@@ -137,18 +137,18 @@ if st.button("🔮 Predict Future Prices"):
     # RISK METER (FINAL FIX)
     # -----------------------------
     # Use predicted + historical together
-    combined = np.concatenate((prices[-15:], future_predictions))
+    combined = np.concatenate((prices[-7:], future_predictions))
 
     returns = np.diff(combined) / combined[:-1]
 
     vol = np.std(returns)
 
     # Add slight randomness to make it dynamic
-    vol = vol * np.random.uniform(0.9, 1.1)
+    vol = vol * np.random.uniform(0.8, 1.3)
 
-    if vol < 0.01:
+    if vol < 0.008:
        risk = "Low Risk 🟢"
-    elif vol < 0.025:
+    elif vol < 0.015:
        risk = "Medium Risk 🟡"
     else:
        risk = "High Risk 🔴"
