@@ -97,7 +97,7 @@ X = X.reshape(len(X), window)
 # -----------------------------
 # TRAIN MODEL
 # -----------------------------
-@st.cache_data
+
 def train_model(X, y):
     model = LinearRegression()
     model.fit(X, y)
@@ -113,7 +113,7 @@ if st.button("🔮 Predict Future Prices"):
     future_predictions = []
 
     for _ in range(days):
-        pred = model.predict(last_window.reshape(1, -1))[0]
+        pred = model.predict(last_window.reshape(1, -1))[0] * np.random.uniform(0.98, 1.02)
         future_predictions.append(pred)
         last_window = np.append(last_window[1:], pred)
 
@@ -122,9 +122,9 @@ if st.button("🔮 Predict Future Prices"):
     # -----------------------------
     change = (future_predictions[-1] - prices[-1]) / prices[-1]
 
-    if change > 0.05:
+    if change > 0.01:
        recommendation = "BUY 🚀"
-    elif change < -0.05:
+    elif change < -0.01:
        recommendation = "SELL 📉"
     else:
        recommendation = "HOLD ⚖️"
@@ -133,9 +133,9 @@ if st.button("🔮 Predict Future Prices"):
     # RISK METER
     # -----------------------------
     vol = np.std(prices[-30:]) / np.mean(prices[-30:])
-    if vol < 0.02:
+    if vol < 0.05:
         risk = "Low Risk 🟢"
-    elif vol < 0.05:
+    elif vol < 0.1:
         risk = "Medium Risk 🟡"
     else:
         risk = "High Risk 🔴"
