@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptoVision AI</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>CryptoVision AI</h1>
+
+    <!-- Live Dashboard -->
+    <div class="dashboard">
+        <h2>Live Bitcoin Price (Last 7 Days)</h2>
+        <canvas id="liveChart"></canvas>
+    </div>
+
+    <!-- User Controls -->
+    <div class="controls">
+        <label>Predict Days:
+            <input type="number" id="days" value="7" min="1">
+        </label>
+        <label>Investment (₹):
+            <input type="number" id="investment" value="1000" min="1">
+        </label>
+        <button id="predictBtn">Predict</button>
+    </div>
+
+    <!-- Results -->
+    <div class="results">
+        <h3>Prediction Results</h3>
+        <p id="recommendation">Recommendation: -</p>
+        <p id="confidence">Confidence: -</p>
+        <p id="risk">Risk: -</p>
+        <p id="predicted_value">Future Value: -</p>
+        <canvas id="predChart"></canvas>
+    </div>
+</div>
+
+<script>
+// Pass Python variables to JS safely
+const dates = {{ dates|tojson }};
+const prices = {{ prices|tojson }};
+
+// Live Bitcoin chart
+const ctx = document.getElementById('liveChart').getContext('2d');
+const liveChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: dates,
+        datasets: [{
+            label: 'Bitcoin Price (₹)',
+            data: prices,
+            borderColor: '#00ff99',
+            backgroundColor: 'rgba(0,255,153,0.1)',
+            tension: 0.3
+        }]
+    },
+    options: { responsive: true }
+});
+
+// Prediction chart
+const predCtx = document.getElementById('predChart').getContext('2d');
+let predChart = null;
+
+// Predict button event
+document.getElementById('predictBtn').addEventListener('click', async () => {
+    const days = document.getElementById('days').value;
+    const investment = document.getElementById('investment').value;
+
+    const formData = new FormData();
+    formData.append('days', days);
+    formData.append('investment', investment);
+
+    try {
+        const res = await fetch('/predict', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        // Update results
+        document.getElementById('recommendation').innerText = `Recommendation: ${data.recommendation}`;
+        document.getElementById('confidence').innerText = `Confidence: ${data.confidence}%`;
+        document.getElementById('risk').innerText = `Risk: ${data.risk}`;
+        document.getElementById('predicted_value').innerText = `Future Value: ₹${data.predicted_value}`;
+
+        // Build chart data
+        const futureDates = [...dates];
+        for (let i = 1; i <= data.predicted_prices.length; i++) {
+            futureDates.push(`Day ${i}`);
+        }
+        const futurePrices = [...prices, ...data.predicted_prices];
+
+        if (predChart) predChart.destroy(); // remove old chart
+        predChart = new Chart(predCtx, {
+            type: 'line',
+            data: {
+                labels: futureDates,
+                datasets: [{
+                    label: 'Past + Predicted Price',
+                    data: futurePrices,
+                    borderColor: '#ff0066',
+                    backgroundColor: 'rgba(255,0,102,0.1)',
+                    tension: 0.3
+                }]
+            },
+            options: { responsive: true }
+        });
+
+    } catch (err) {
+        console.error("Error fetching prediction:", err);
+        alert("Prediction failed. Check console for errors.");
+    }
+});
+</script>
+</body>
+</html>
