@@ -130,13 +130,13 @@ if st.button("🔮 Predict Future Prices"):
     # -----------------------------
     # RISK METER
     # -----------------------------
-   vol = np.std(prices[-60:]) / np.mean(prices[-60:])
+    vol = np.std(prices[-60:]) / np.mean(prices[-60:])
 
-   if vol < 0.02:
+    if vol < 0.02:
       risk = "Low Risk 🟢"
-   elif vol < 0.05:
+    elif vol < 0.05:
       risk = "Medium Risk 🟡"
-   else:
+    else:
      risk = "High Risk 🔴"
 
     # -----------------------------
