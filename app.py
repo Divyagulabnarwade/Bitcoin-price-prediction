@@ -64,7 +64,7 @@ st.markdown("Predict future Bitcoin prices using a simple Linear Regression mode
 @st.cache_data
 def load_data():
     df = pd.read_csv('BTC-USD.csv')
-    df['Close'] = df['Close'].fillna(method='ffill')
+    df['Close'] = df['Close'].ffill()
     return df
 
 data = load_data()
