@@ -15,33 +15,48 @@ st.set_page_config(
 )
 
 # -----------------------------
-# CUSTOM CSS
+# CUSTOM CSS - DARK/NEON THEME
 # -----------------------------
-st.markdown("""
-<style>
-header {visibility: hidden;}
-footer {visibility: hidden;}
+st.markdown(
+    """
+    <style>
+    /* Hide Streamlit default menu and footer */
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    /* Remove top padding */
+    .css-1l02zno {padding-top: 0rem;}
 
-.stApp {
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    color: white;
-}
+    /* Dark gradient background */
+    .stApp {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        color: #ffffff;
+    }
 
-h1, h2, h3 { color: #00ff99; }
+    /* Headers */
+    h1, h2, h3 { color: #00ff99; }
 
-div.stButton > button {
-    background-color: #ff0066 !important;
-    color: white !important;
-    border-radius: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
+    /* Body text */
+    p, span, div { color: #ffffff !important; }
+
+    /* Buttons */
+    div.stButton > button {
+        background-color: #ff0066 !important;
+        color: #ffffff !important;
+        border-radius: 10px;
+    }
+
+    /* Input fields */
+    input {background-color:#1a1a2e !important; color:#00ff99 !important;}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # -----------------------------
 # TITLE
 # -----------------------------
 st.title("💰 Bitcoin Price Prediction")
-st.markdown("Predict future Bitcoin prices using Machine Learning")
+st.markdown("Predict future Bitcoin prices using a simple Linear Regression model")
 
 # -----------------------------
 # LOAD DATA
@@ -49,7 +64,7 @@ st.markdown("Predict future Bitcoin prices using Machine Learning")
 @st.cache_data
 def load_data():
     df = pd.read_csv('BTC-USD.csv')
-    df['Close'] = df['Close'].ffill()
+    df['Close'] = df['Close'].fillna(method='ffill')
     return df
 
 data = load_data()
@@ -61,15 +76,16 @@ with st.expander("📊 Show Dataset"):
 # USER INPUTS
 # -----------------------------
 days = st.slider("Select number of days to predict", 1, 60, 30)
-investment = st.number_input("Enter investment amount (₹)", min_value=100, value=1000)
+investment = st.number_input("Enter investment amount (₹)", min_value=100, value=1000, step=100)
 
 # -----------------------------
-# PREPARE DATA
+# PREPARE DATA FOR MODEL
 # -----------------------------
+# Use last 365 days for faster computation
 prices = data['Close'].dropna().to_numpy()[-365:]
 window = 7
-
 X, y = [], []
+
 for i in range(len(prices) - window):
     X.append(prices[i:i+window])
     y.append(prices[i+window])
@@ -93,8 +109,6 @@ model = train_model(X, y)
 # PREDICTION
 # -----------------------------
 if st.button("🔮 Predict Future Prices"):
-
-    # Generate predictions
     last_window = prices[-window:].copy()
     future_predictions = []
 
@@ -114,43 +128,47 @@ if st.button("🔮 Predict Future Prices"):
         recommendation = "HOLD ⚖️"
 
     # -----------------------------
-    # RISK METER (FIXED)
+    # RISK METER
     # -----------------------------
-    vol = np.std(future_predictions) / np.mean(future_predictions)
-
-    st.write("Volatility:", vol)
-
-    if vol < 0.005:
+    vol = np.std(prices[-window:]) / np.mean(prices[-window:])
+    if vol < 0.01:
         risk = "Low Risk 🟢"
-    elif vol < 0.015:
+    elif vol < 0.03:
         risk = "Medium Risk 🟡"
     else:
         risk = "High Risk 🔴"
 
     # -----------------------------
-    # INVESTMENT VALUE
+    # PREDICTED INVESTMENT VALUE
     # -----------------------------
     future_value = investment * (future_predictions[-1] / prices[-1])
 
     # -----------------------------
-    # PLOT
+    # PLOT HISTORICAL + PREDICTED
     # -----------------------------
     fig, ax = plt.subplots(figsize=(10,5))
-    fig.patch.set_facecolor('#0d0d0d')
-    ax.set_facecolor('#111')
+    fig.patch.set_facecolor('#0d0d0d')      # figure background
+    ax.set_facecolor('#111')                # axes background
+    ax.tick_params(colors='white', labelcolor='white')
+    ax.spines['bottom'].set_color('white')
+    ax.spines['left'].set_color('white')
+    ax.yaxis.label.set_color('white')
+    ax.xaxis.label.set_color('white')
+    ax.title.set_color('#00ff99')
 
     ax.plot(range(len(prices)), prices, label="Historical Prices", color='#00ff99')
-    ax.plot(range(len(prices), len(prices)+days), future_predictions,
-            label="Predicted Prices", color='#ff0066', linestyle='--')
+    ax.plot(range(len(prices), len(prices)+days), future_predictions, label="Predicted Prices", color='#ff0066', linestyle='--')
 
-    ax.set_title(f"Bitcoin Price Prediction for Next {days} Days", color='white')
-    ax.legend()
+    ax.set_title(f"Bitcoin Price Prediction for Next {days} Days")
+    ax.set_xlabel("Days")
+    ax.set_ylabel("Price (₹)")
     ax.grid(True)
+    ax.legend(facecolor='#111', edgecolor='white', labelcolor='white')
 
     st.pyplot(fig)
 
     # -----------------------------
-    # OUTPUT
+    # SHOW METRICS
     # -----------------------------
     col1, col2, col3 = st.columns(3)
     col1.metric("💡 Recommendation", recommendation)
