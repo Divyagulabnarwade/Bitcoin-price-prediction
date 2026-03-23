@@ -128,9 +128,9 @@ if st.button("🔮 Predict Future Prices"):
 
     
 
-    if vol < 0.005:
+    if vol < 0.002:
         risk = "Low Risk 🟢"
-    elif vol < 0.015:
+    elif vol < 0.006:
         risk = "Medium Risk 🟡"
     else:
         risk = "High Risk 🔴"
