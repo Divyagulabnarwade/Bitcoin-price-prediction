@@ -165,4 +165,5 @@ if st.button("🔮 Predict Future Prices"):
     col1, col2, col3 = st.columns(3)
     col1.metric("💡 Recommendation", recommendation)
     col2.metric("⚠️ Risk", risk)
-    col3.metric("💰 Predicted Value", f"₹{future_value:.2f}").2f}")
+    col3.metric("💰 Predicted Value", f"₹{future_value:.2f}")
+    
