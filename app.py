@@ -120,20 +120,22 @@ if st.button("🔮 Predict Future Prices"):
     # -----------------------------
     # RECOMMENDATION
     # -----------------------------
-    if future_predictions[-1] > prices[-1] * 1.02:
-        recommendation = "BUY 🚀"
-    elif future_predictions[-1] < prices[-1] * 0.98:
-        recommendation = "SELL 📉"
+    change = (future_predictions[-1] - prices[-1]) / prices[-1]
+
+    if change > 0.05:
+       recommendation = "BUY 🚀"
+    elif change < -0.05:
+       recommendation = "SELL 📉"
     else:
-        recommendation = "HOLD ⚖️"
+       recommendation = "HOLD ⚖️"
 
     # -----------------------------
     # RISK METER
     # -----------------------------
-    vol = np.std(prices[-window:]) / np.mean(prices[-window:])
-    if vol < 0.01:
+    vol = np.std(prices[-30:]) / np.mean(prices[-30:])
+    if vol < 0.02:
         risk = "Low Risk 🟢"
-    elif vol < 0.03:
+    elif vol < 0.05:
         risk = "Medium Risk 🟡"
     else:
         risk = "High Risk 🔴"
