@@ -20,25 +20,32 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    /* Hide Streamlit default menu and footer */
     header {visibility: hidden;}
     footer {visibility: hidden;}
+    /* Remove top padding */
     .css-1l02zno {padding-top: 0rem;}
 
+    /* Dark gradient background */
     .stApp {
         background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
         color: #ffffff;
     }
 
+    /* Headers */
     h1, h2, h3 { color: #00ff99; }
 
+    /* Body text */
     p, span, div { color: #ffffff !important; }
 
+    /* Buttons */
     div.stButton > button {
         background-color: #ff0066 !important;
         color: #ffffff !important;
         border-radius: 10px;
     }
 
+    /* Input fields */
     input {background-color:#1a1a2e !important; color:#00ff99 !important;}
     </style>
     """,
@@ -74,6 +81,7 @@ investment = st.number_input("Enter investment amount (₹)", min_value=100, val
 # -----------------------------
 # PREPARE DATA FOR MODEL
 # -----------------------------
+# Use last 365 days for faster computation
 prices = data['Close'].dropna().to_numpy()[-365:]
 window = 7
 X, y = [], []
@@ -101,8 +109,6 @@ model = train_model(X, y)
 # PREDICTION
 # -----------------------------
 if st.button("🔮 Predict Future Prices"):
-
-    # Generate predictions
     last_window = prices[-window:].copy()
     future_predictions = []
 
@@ -114,25 +120,23 @@ if st.button("🔮 Predict Future Prices"):
     # -----------------------------
     # RECOMMENDATION
     # -----------------------------
-    recent_change = (prices[-1] - prices[-10]) / prices[-10]
-
-    if recent_change > 0.02:
+    if future_predictions[-1] > prices[-1] * 1.02:
         recommendation = "BUY 🚀"
-    elif recent_change < -0.02:
+    elif future_predictions[-1] < prices[-1] * 0.98:
         recommendation = "SELL 📉"
     else:
         recommendation = "HOLD ⚖️"
+
     # -----------------------------
-    # RISK METER (FIXED)
+    # RISK METER
     # -----------------------------
-    vol = np.std(prices[-30:])
-    
-    if vol < 100:
-       risk = "Low Risk 🟢"
-    elif vol < 300:
-       risk = "Medium Risk 🟡"
+    vol = np.std(prices[-window:]) / np.mean(prices[-window:])
+    if vol < 0.01:
+        risk = "Low Risk 🟢"
+    elif vol < 0.03:
+        risk = "Medium Risk 🟡"
     else:
-       risk = "High Risk 🔴"
+        risk = "High Risk 🔴"
 
     # -----------------------------
     # PREDICTED INVESTMENT VALUE
@@ -143,18 +147,23 @@ if st.button("🔮 Predict Future Prices"):
     # PLOT HISTORICAL + PREDICTED
     # -----------------------------
     fig, ax = plt.subplots(figsize=(10,5))
-    fig.patch.set_facecolor('#0d0d0d')
-    ax.set_facecolor('#111')
+    fig.patch.set_facecolor('#0d0d0d')      # figure background
+    ax.set_facecolor('#111')                # axes background
+    ax.tick_params(colors='white', labelcolor='white')
+    ax.spines['bottom'].set_color('white')
+    ax.spines['left'].set_color('white')
+    ax.yaxis.label.set_color('white')
+    ax.xaxis.label.set_color('white')
+    ax.title.set_color('#00ff99')
 
     ax.plot(range(len(prices)), prices, label="Historical Prices", color='#00ff99')
-    ax.plot(range(len(prices), len(prices)+days), future_predictions,
-            label="Predicted Prices", color='#ff0066', linestyle='--')
+    ax.plot(range(len(prices), len(prices)+days), future_predictions, label="Predicted Prices", color='#ff0066', linestyle='--')
 
     ax.set_title(f"Bitcoin Price Prediction for Next {days} Days")
     ax.set_xlabel("Days")
     ax.set_ylabel("Price (₹)")
     ax.grid(True)
-    ax.legend()
+    ax.legend(facecolor='#111', edgecolor='white', labelcolor='white')
 
     st.pyplot(fig)
 
@@ -165,4 +174,3 @@ if st.button("🔮 Predict Future Prices"):
     col1.metric("💡 Recommendation", recommendation)
     col2.metric("⚠️ Risk", risk)
     col3.metric("💰 Predicted Value", f"₹{future_value:.2f}")
-    
