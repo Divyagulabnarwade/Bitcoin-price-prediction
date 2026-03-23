@@ -144,11 +144,11 @@ if st.button("🔮 Predict Future Prices"):
     vol = np.std(returns)
 
     # Add slight randomness to make it dynamic
-    vol = vol * np.random.uniform(0.8, 1.3)
+    vol = vol * np.random.uniform(1.5, 3.0)
 
-    if vol < 0.008:
+    if vol < 0.01:
        risk = "Low Risk 🟢"
-    elif vol < 0.015:
+    elif vol < 0.02:
        risk = "Medium Risk 🟡"
     else:
        risk = "High Risk 🔴"
