@@ -122,13 +122,14 @@ if st.button("🔮 Predict Future Prices"):
     # -----------------------------
     change = (future_predictions[-1] - prices[-1]) / prices[-1]
 
-    if change > 0.01:
+    recent_trend = prices[-1] - prices[-5]
+
+    if change > 0.01 and recent_trend > 0:
        recommendation = "BUY 🚀"
-    elif change < -0.01:
+    elif change < -0.01 or recent_trend < 0:
        recommendation = "SELL 📉"
     else:
        recommendation = "HOLD ⚖️"
-
     # -----------------------------
     # RISK METER
     # -----------------------------
