@@ -85,8 +85,11 @@ investment = st.number_input("Enter investment amount (₹)", min_value=100, val
 # PREPARE DATA FOR MODEL
 # -----------------------------
 # Use last 365 days for faster computation
-prices = data['Close'].dropna().values.flatten()[-365:]
-window = 7
+prices = data['Close'].dropna().values
+if len(prices) < 10:
+    st.error("Not enough data")
+    st.stop()
+window = 5
 X, y = [], []
 
 for i in range(len(prices) - window):
@@ -95,7 +98,10 @@ for i in range(len(prices) - window):
 
 X = np.array(X)
 y = np.array(y)
-X = X.reshape(len(X), window)
+
+if len(X) == 0 or len(y) == 0:
+    st.error("Data preparation failed")
+    st.stop()
 
 # -----------------------------
 # TRAIN MODEL
@@ -103,10 +109,10 @@ X = X.reshape(len(X), window)
 
 def train_model(X, y):
     model = LinearRegression()
-    model.fit(X, y)
+    model.fit(X.reshape(len(X), -1), y)
     return model
 
-model = train_model(X, y)
+
 
 # -----------------------------
 # PREDICTION
