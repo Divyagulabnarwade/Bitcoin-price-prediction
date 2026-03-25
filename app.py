@@ -65,11 +65,23 @@ import yfinance as yf
 
 @st.cache_data
 def load_data():
-    df = yf.download('BTC-USD', period='1y')
-    df = df.reset_index()
-    df['Close'] = df['Close'].ffill()
-    return df
+    import yfinance as yf
+    
+    try:
+        df = yf.download('BTC-USD', period='1y', progress=False)
+        
+        # check if empty
+        if df.empty:
+            st.error("Failed to fetch data from internet")
+            st.stop()
+        
+        df = df.reset_index()
+        df['Close'] = df['Close'].ffill()
+        return df
 
+    except:
+        st.error("Internet issue or yfinance not working")
+        st.stop()
 data = load_data()
 
 with st.expander("📊 Show Dataset"):
