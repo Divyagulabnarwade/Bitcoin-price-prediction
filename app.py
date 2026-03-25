@@ -85,11 +85,14 @@ investment = st.number_input("Enter investment amount (₹)", min_value=100, val
 # PREPARE DATA FOR MODEL
 # -----------------------------
 # Use last 365 days for faster computation
-prices = data['Close'].dropna().values
-if len(prices) < 10:
-    st.error("Not enough data")
+prices = data['Close'].dropna().values.flatten()
+
+if len(prices) < 50:
+    st.error("Not enough data loaded")
     st.stop()
-window = 5
+
+prices = prices[-365:]
+window = 7
 X, y = [], []
 
 for i in range(len(prices) - window):
@@ -98,10 +101,7 @@ for i in range(len(prices) - window):
 
 X = np.array(X)
 y = np.array(y)
-
-if len(X) == 0 or len(y) == 0:
-    st.error("Data preparation failed")
-    st.stop()
+X = X.reshape(len(X), window)
 
 # -----------------------------
 # TRAIN MODEL
@@ -109,10 +109,10 @@ if len(X) == 0 or len(y) == 0:
 
 def train_model(X, y):
     model = LinearRegression()
-    model.fit(X.reshape(len(X), -1), y)
+    model.fit(X, y)
     return model
 
-
+model = train_model(X, y)
 
 # -----------------------------
 # PREDICTION
@@ -122,7 +122,8 @@ if st.button("🔮 Predict Future Prices"):
     future_predictions = []
 
     for _ in range(days):
-        pred = model.predict(last_window.reshape(1, -1))[0] * np.random.uniform(0.98, 1.02)
+        pred = model.predict(last_window.reshape(1, -1))[0]
+        pred = pred + np.random.normal(0, 30)
         future_predictions.append(pred)
         last_window = np.append(last_window[1:], pred)
 
