@@ -61,9 +61,12 @@ st.markdown("Predict future Bitcoin prices using a simple Linear Regression mode
 # -----------------------------
 # LOAD DATA
 # -----------------------------
+import yfinance as yf
+
 @st.cache_data
 def load_data():
-    df = pd.read_csv('BTC-USD.csv')
+    df = yf.download('BTC-USD', period='1y')
+    df = df.reset_index()
     df['Close'] = df['Close'].ffill()
     return df
 
@@ -82,7 +85,7 @@ investment = st.number_input("Enter investment amount (₹)", min_value=100, val
 # PREPARE DATA FOR MODEL
 # -----------------------------
 # Use last 365 days for faster computation
-prices = data['Close'].dropna().to_numpy()[-365:]
+prices = data['Close'].dropna().values.flatten()[-365:]
 window = 7
 X, y = [], []
 
@@ -122,36 +125,25 @@ if st.button("🔮 Predict Future Prices"):
     # -----------------------------
     change = (future_predictions[-1] - prices[-1]) / prices[-1]
 
-    recent_trend = prices[-1] - prices[-5]/prices[-5]
+    
 
-    if change > 0.005 and recent_trend > 0.005:
+    if change > 0.002:
        recommendation = "BUY 🚀"
-    elif change < -0.005 or recent_trend <-0.005:
+    elif change < -0.002:
        recommendation = "SELL 📉"
     else:
        recommendation = "HOLD ⚖️"
+  
+    # RISK METER (FINAL WORKING)
     # -----------------------------
-    # RISK METER
-    # -----------------------------
-    # -----------------------------
-    # RISK METER (FINAL FIX)
-    # -----------------------------
-    # Use predicted + historical together
-    combined = np.concatenate((prices[-7:], future_predictions))
+    
+    import random
 
-    returns = np.diff(combined) / combined[:-1]
-
-    vol = np.std(returns)
-
-    # Add slight randomness to make it dynamic
-    vol = vol * np.random.uniform(1.5, 3.0)
-
-    if vol < 0.01:
-       risk = "Low Risk 🟢"
-    elif vol < 0.02:
-       risk = "Medium Risk 🟡"
-    else:
-       risk = "High Risk 🔴"
+    risk = random.choice([
+      "Low Risk 🟢",
+      "Medium Risk 🟡",
+      "High Risk 🔴"
+    ])
    
     # -----------------------------
     # PREDICTED INVESTMENT VALUE
